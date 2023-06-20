@@ -13,15 +13,16 @@ provider "aws" {
 }
 
 resource "aws_instance" "app_server" {
+  count = 3
   ami           = var.ami
   instance_type = var.instance_type
 
   tags = {
-    Name = var.instance_name
+    Name = "${var.instance_name}-${count.index}"
   }
 }
 
-resource "aws_ec2_instance_state" "app_server" {
+/*resource "aws_ec2_instance_state" "app_server" {
   instance_id = aws_instance.app_server.id
   state       = var.instance_state
-}
+}*/
