@@ -37,6 +37,14 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
+data "aws_iam_policy_document" "policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["lambda:InvokeFunction"]
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role" "function_role" {
   provider = aws.oregon
   name     = "aaron-iam-role"
@@ -46,9 +54,30 @@ resource "aws_iam_role" "function_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "lambda.amazonaws.com"
+          Service = ["lambda.amazonaws.com", "scheduler.amazonaws.com"]
         }
       },
     ]
   })
+  inline_policy {
+    name   = "policy-8675309"
+    policy = data.aws_iam_policy_document.policy.json
+  }
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+}
+
+resource "aws_scheduler_schedule" "schedule" {
+  provider   = aws.oregon
+  name       = "schedule1"
+  group_name = "default"
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 minute)"
+
+  target {
+    arn      = aws_lambda_function.lambda.arn
+    role_arn = aws_iam_role.function_role.arn
+  }
 }
