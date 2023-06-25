@@ -19,17 +19,17 @@ provider "aws" {
 data "archive_file" "function_zip" {
   source_dir  = "${path.module}/lambda"
   type        = "zip"
-  output_path = "lambda.zip"
+  output_path = var.zipfile
 }
 
 resource "aws_lambda_function" "lambda" {
   provider      = aws.oregon
   function_name = "aarons-tf-lambda"
-  handler       = "function.handler"
-  runtime       = "python3.10"
-  architectures = ["arm64"]
+  handler       = var.handler
+  runtime       = var.runtime
+  architectures = [var.architecture]
 
-  filename = "lambda.zip"
+  filename = var.zipfile
   role     = aws_iam_role.function_role.arn
 
   tags = {
