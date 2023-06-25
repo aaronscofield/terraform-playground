@@ -24,7 +24,7 @@ data "archive_file" "function_zip" {
 
 resource "aws_lambda_function" "lambda" {
   provider      = aws.oregon
-  function_name = "aarons-tf-lambda"
+  function_name = var.lambda_name
   handler       = var.handler
   runtime       = var.runtime
   architectures = [var.architecture]
@@ -60,7 +60,7 @@ resource "aws_iam_role" "function_role" {
     ]
   })
   inline_policy {
-    name   = "policy-8675309"
+    name   = var.iam_policy_name
     policy = data.aws_iam_policy_document.policy.json
   }
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
@@ -68,13 +68,13 @@ resource "aws_iam_role" "function_role" {
 
 resource "aws_scheduler_schedule" "schedule" {
   provider   = aws.oregon
-  name       = "schedule1"
-  group_name = "default"
+  name       = var.schedule_name
+  group_name = var.schedule_group
   flexible_time_window {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(1 minute)"
+  schedule_expression = var.schedule
 
   target {
     arn      = aws_lambda_function.lambda.arn
